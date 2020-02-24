@@ -1,0 +1,75 @@
+import * as pacote from 'pacote'
+import {publish as _publish} from 'libnpmpublish'
+import fetch, {RequestInit} from 'node-fetch'
+import ssri from 'ssri'
+
+export function namedScope(name: string) {
+  const scope = name.match(/^(@\w+)\/\w+$/)
+  return scope ? scope[1] : undefined
+}
+
+export function scopedOptions(scope: string | undefined, registry: string, token: string | undefined) {
+  const scopedRegistry = scope ? scope + ':registry' : 'registry'
+  const opts: Record<string, any> = {}
+  opts[scopedRegistry] = registry
+  if (token) {
+    opts.token = token
+  }
+  return opts
+}
+
+export async function getVersions(name: string, options: Record<string, string>): Promise<string[]> {
+  let packument
+  try {
+    packument = await pacote.packument(name, options)
+  } catch(error) {
+    // TODO: special handling only for 404
+    return []
+  }
+  return Object.keys(packument.versions)
+}
+
+export async function getManifest(spec: string, options: Record<string, string>): Promise<Record<string, any>> {
+  return pacote.manifest(spec, options)
+}
+
+// export async function getTarball(spec: string, options: Record<string, string>) {
+//   try {
+//     return await pacote.tarball(spec, options)
+//   } catch(error) {
+//     console.error(error.code)
+//     // TODO: special handling only for EINTEGRITY
+//     return null
+//   }
+// }
+
+export interface ManifestDist {
+  integrity: string
+  shasum: string
+  tarball: string
+}
+
+function getIntegrity(dist: ManifestDist) {
+  return dist.integrity ? dist.integrity : ssri.fromHex(dist.shasum, 'sha1').toString()
+}
+
+export async function fetchTarball(dist: ManifestDist, token?: string) {
+  const options: RequestInit = {}
+  if (token) {
+    options.headers = {Authorization: `Bearer ${token}`}
+  }
+  const res = await fetch(dist.tarball, options)
+  const data = await res.buffer()
+  const check = await ssri.checkData(data, getIntegrity(dist))
+  if (!check) {
+    throw new Error('EINTEGRITY')
+  }
+  return data
+}
+
+export async function publish(
+    manifest: Record<string, string>,
+    tarball: Buffer,
+    options: Record<string, string>): Promise<boolean> {
+  return _publish(manifest, tarball, options)
+}
