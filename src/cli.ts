@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // Parse command line
 // @ts-ignore(TS1208): all files must be modules when the '--isolatedModules' flag is provided
 const {name, from, to} = require('yargs')
