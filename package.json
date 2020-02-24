@@ -1,5 +1,5 @@
 {
-  "name": "regsync",
+  "name": "@joebowbeer/regsync",
   "version": "1.0.0",
   "description": "Publish package versions from one registry into another",
   "main": "dist/index.js",
