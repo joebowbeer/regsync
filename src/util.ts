@@ -1,6 +1,6 @@
 import * as pacote from 'pacote'
 import {publish as _publish} from 'libnpmpublish'
-import fetch, {RequestInit} from 'node-fetch'
+import got from 'got'
 import ssri from 'ssri'
 
 export function namedScope(name: string) {
@@ -48,11 +48,17 @@ function getIntegrity(dist: ManifestDist) {
 }
 
 export async function fetchTarball(dist: ManifestDist, token?: string) {
-  const options: RequestInit = {}
-  if (token) {
-    options.headers = {Authorization: `Bearer ${token}`}
-  }
-  const res = await fetch(dist.tarball, options)
+  const res = got(dist.tarball, {
+    headers: token ? {authorization: `Bearer ${token}`} : {},
+    hooks: {
+      // workaround for https://github.com/sindresorhus/got/issues/1090
+      beforeRedirect: [
+        (options) => {
+          delete options.headers.authorization
+        }
+      ]
+    }
+  })
   const data = await res.buffer()
   const check = await ssri.checkData(data, getIntegrity(dist))
   if (!check) {

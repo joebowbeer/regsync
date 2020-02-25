@@ -41,4 +41,4 @@ Publish package versions from one registry to another.`)
 
 // Publish all versions of the specified package
 require('./index').sync(name, from, to, dryRun)
-  .then(result => console.log('Published', result))
+  .then(result => console.log('Published: %i %s', result, dryRun ? '(Dry Run)' : ''))

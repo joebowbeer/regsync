@@ -25,8 +25,8 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
     return 0
   }
 
-  // So we can publish using latest repository info
-  const latestRepository = srcPackument ? srcPackument.versions[srcPackument['dist-tags'].latest].repository : {}
+  // Always publish latest repository info
+  const latestRepository = srcPackument.versions[srcPackument['dist-tags'].latest].repository
   console.debug('Latest repository', latestRepository)
 
   for (const version of missing) {
