@@ -18,19 +18,13 @@ export function scopedOptions(scope: string | undefined, registry: string, token
   return opts
 }
 
-export async function getVersions(name: string, options: Record<string, string>): Promise<string[]> {
-  let packument
+export async function getPackument(name: string, options: Record<string, string>): Promise<Record<string, any>> {
   try {
-    packument = await pacote.packument(name, options)
+    return await pacote.packument(name, options)
   } catch(error) {
     // TODO: special handling only for 404
-    return []
+    return null
   }
-  return Object.keys(packument.versions)
-}
-
-export async function getManifest(spec: string, options: Record<string, string>): Promise<Record<string, any>> {
-  return pacote.manifest(spec, options)
 }
 
 // export async function getTarball(spec: string, options: Record<string, string>) {
@@ -70,6 +64,11 @@ export async function fetchTarball(dist: ManifestDist, token?: string) {
 export async function publish(
     manifest: Record<string, string>,
     tarball: Buffer,
-    options: Record<string, string>): Promise<boolean> {
+    options: Record<string, string>,
+    dryRun = false): Promise<boolean> {
+  if (dryRun) {
+    console.log('Dry Run')
+    return true
+  }
   return _publish(manifest, tarball, options)
 }

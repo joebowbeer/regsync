@@ -1,42 +1,51 @@
-import {fetchTarball, getManifest, getVersions, namedScope, publish, scopedOptions} from './util'
+import {fetchTarball, getPackument, namedScope, publish, scopedOptions} from './util'
 
-export async function sync(name: string, from: Record<string, string>, to: Record<string, string>) {
+export async function sync(name: string, from: Record<string, string>, to: Record<string, string>, dryRun = false) {
   // TODO: handle version spec
   const scope = namedScope(name)
   console.debug('scope', scope)
 
   // get available source versions
   const srcOptions = scopedOptions(scope, from.registry, from.token)
-  const srcVersions = await getVersions(name, srcOptions)
+  // fullMetadata may needed to obtain the repository property in manifest
+  srcOptions.fullMetadata = true
+  const srcPackument = await getPackument(name, srcOptions)
+  const srcVersions = srcPackument ? Object.keys(srcPackument.versions) : []
   console.debug('Source versions', srcVersions)
 
   // get available target versions
   const dstOptions = scopedOptions(scope, to.registry, to.token)
-  const dstVersions = await getVersions(name, dstOptions)
+  const dstPackument = await getPackument(name, dstOptions)
+  const dstVersions = dstPackument ? Object.keys(dstPackument.versions) : []
   console.debug('Target versions', dstVersions)
 
   const missing = srcVersions.filter(x => !dstVersions.includes(x))
   console.log('Missing versions', missing)
+  if (!missing.length) {
+    return 0
+  }
 
-  // fullMetadata is needed to obtain the repository property in manifest
-  srcOptions.fullMetadata = true
+  // So we can publish using latest repository info
+  const latestRepository = srcPackument ? srcPackument.versions[srcPackument['dist-tags'].latest].repository : {}
+  console.debug('Latest repository', latestRepository)
 
   for (const version of missing) {
     const spec = name + '@' + version
-    console.log('Reading ' + spec)
+    console.log('Reading %s from %s', spec, from.registry)
 
-    const manifest = await getManifest(spec, srcOptions)
+    const manifest = srcPackument.versions[version]
     console.debug('Dist', manifest.dist)
 
     //const tarball = await getTarball(spec, srcOptions)
     const tarball = await fetchTarball(manifest.dist, from.token)
     console.debug('Tarball length', tarball.length)
 
-    // remove source registry from manifest before publishing to target
+    // remove source registry from manifest and update repository before publishing to target
     delete manifest.publishConfig
+    manifest.repository = latestRepository
 
-    await publish(manifest, tarball, dstOptions)
-    console.log('Published ' + spec)
+    console.log('Publishing %s to %s', spec, to.registry)
+    await publish(manifest, tarball, dstOptions, dryRun)
   }
-  console.log('ok')
+  return missing.length
 }
