@@ -9,6 +9,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "npm run compile -- --delete-dir-on-start",
     "compile": "babel src -d dist --extensions .ts --ignore '**/*.d.ts,**/*.test.ts'",
