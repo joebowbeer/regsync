@@ -4,7 +4,7 @@ import got from 'got'
 import ssri from 'ssri'
 
 export function namedScope(name: string) {
-  const scope = name.match(/^(@\w+)\/\w+$/)
+  const scope = name.match(/^(@[\w-]+)\/[\w-]+$/)
   return scope ? scope[1] : undefined
 }
 
