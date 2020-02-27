@@ -12,6 +12,10 @@ test('namedScope with @scope/', () => {
   expect(namedScope('@pkgscope/pkgname')).toBe('@pkgscope')
 })
 
+test('namedScope with hyphenated names', () => {
+  expect(namedScope('@pkg-scope/pkg-name')).toBe('@pkg-scope')
+})
+
 test('scopedOptions with scope and token', () => {
   expect(scopedOptions('@pkgscope', 'myregistry', 'mytoken')).toEqual({
     '@pkgscope:registry': 'myregistry',
