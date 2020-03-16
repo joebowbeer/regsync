@@ -67,8 +67,24 @@ export async function fetchTarball(dist: ManifestDist, token?: string) {
   return data
 }
 
+// Prepare manifest before publishing to target
+export function prepareManifest(manifest: Record<string, any>, latestRepository) {
+  // Remove source registry
+  delete manifest.publishConfig
+  // Update repository
+  manifest.repository = latestRepository
+  // Workaround for npm.pkg.github.com: remove non-string values from dist
+  for (const entry of Object.entries(manifest.dist)) {
+    const key = entry[0]
+    const val = entry[1]
+    if (typeof val !== 'string') {
+      delete manifest.dist[key]
+    }
+  }
+}
+
 export async function publish(
-    manifest: Record<string, string>,
+    manifest: Record<string, any>,
     tarball: Buffer,
     options: Record<string, string>,
     dryRun = false): Promise<boolean> {
