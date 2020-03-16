@@ -1,4 +1,4 @@
-import {namedScope, scopedOptions} from './util'
+import {namedScope, prepareManifest, scopedOptions} from './util'
 
 test('namedScope without scope', () => {
   expect(namedScope('pkgname')).toBeUndefined
@@ -34,4 +34,27 @@ test('scopedOptions without scope or token', () => {
   expect(scopedOptions(undefined, 'myregistry', undefined)).toEqual({
     registry: 'myregistry'
   })
+})
+
+test('prepareManifest removes publishConfig and updates repository', () => {
+  const manifest = {
+    dist: {},
+    publishConfig: 'myPublishConfig',
+    repository: 'oldRepository'
+  }
+  prepareManifest(manifest, 'newRepository')
+  expect(manifest.publishConfig).toBeUndefined
+  expect(manifest.repository).toEqual('newRepository')
+})
+
+test('prepareManifest removes non-string values from dist', () => {
+  const manifest = {
+    dist: {
+      fileCount: 123,
+      integrity: 'myIntegrity',
+      unpackedSize: 456
+    }
+  }
+  prepareManifest(manifest, 'myRepository')
+  expect(manifest.dist).toEqual({integrity: 'myIntegrity'})
 })

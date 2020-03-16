@@ -1,4 +1,4 @@
-import {fetchTarball, getPackument, namedScope, publish, scopedOptions} from './util'
+import {fetchTarball, getPackument, namedScope, prepareManifest, publish, scopedOptions} from './util'
 
 export async function sync(name: string, from: Record<string, string>, to: Record<string, string>, dryRun = false) {
   // TODO: handle version spec
@@ -40,9 +40,7 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
     const tarball = await fetchTarball(manifest.dist, from.token)
     console.debug('Tarball length', tarball.length)
 
-    // remove source registry from manifest and update repository before publishing to target
-    delete manifest.publishConfig
-    manifest.repository = latestRepository
+    prepareManifest(manifest, latestRepository)
 
     console.log('Publishing %s to %s', spec, to.registry)
     await publish(manifest, tarball, dstOptions, dryRun)
