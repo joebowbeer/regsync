@@ -47,7 +47,7 @@ test('prepareManifest removes publishConfig and updates repository', () => {
   expect(manifest.repository).toEqual('newRepository')
 })
 
-test('prepareManifest removes non-string values from dist', () => {
+test('prepareManifest retains non-string values from dist', () => {
   const manifest = {
     dist: {
       fileCount: 123,
@@ -55,6 +55,7 @@ test('prepareManifest removes non-string values from dist', () => {
       unpackedSize: 456
     }
   }
+  const expected = {...manifest.dist}
   prepareManifest(manifest, 'myRepository')
-  expect(manifest.dist).toEqual({integrity: 'myIntegrity'})
+  expect(manifest.dist).toEqual(expected)
 })
