@@ -1,6 +1,6 @@
 {
   "name": "@joebowbeer/regsync",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Publish package versions from one registry into another",
   "main": "dist/index.js",
   "bin": {
