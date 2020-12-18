@@ -34,6 +34,9 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
     console.log('Reading %s from %s', spec, from.registry)
 
     const manifest = srcPackument.versions[version]
+    if (!manifest.readme) {
+      manifest.readme = srcPackument.readme
+    }
     console.debug('Dist', manifest.dist)
 
     //const tarball = await getTarball(spec, srcOptions)
