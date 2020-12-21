@@ -68,11 +68,23 @@ export async function fetchTarball(dist: ManifestDist, token?: string) {
 }
 
 // Prepare manifest before publishing to target
-export function prepareManifest(manifest: Record<string, any>, latestRepository) {
+export function prepareManifest(packument: Record<string, any>, version: string): Record<string, any> {
+  const manifest = packument.versions[version]
+  const latestVersion = packument['dist-tags'].latest
+
   // Remove source registry
   delete manifest.publishConfig
-  // Update repository
-  manifest.repository = latestRepository
+
+  // Always publish latest repository info
+  manifest.repository = packument.versions[latestVersion].repository
+
+  // Ensure we include the readme on the latest version
+  if (!manifest.readme && version === latestVersion) {
+    manifest.readme = packument.readme
+    manifest.readmeFilename = packument.readmeFilename
+  }
+
+  return manifest
 }
 
 export async function publish(
