@@ -37,25 +37,87 @@ test('scopedOptions without scope or token', () => {
 })
 
 test('prepareManifest removes publishConfig and updates repository', () => {
-  const manifest = {
-    dist: {},
-    publishConfig: 'myPublishConfig',
-    repository: 'oldRepository'
+  const packument = {
+    'dist-tags': {
+      latest: '1.0.0'
+    },
+    versions: {
+      '0.0.1': {
+        publishConfig: 'myPublishConfig',
+        repository: 'oldRepository'
+      },
+      '1.0.0': {
+        publishConfig: 'myPublishConfig',
+        repository: 'newRepository'
+      }
+    }
   }
-  prepareManifest(manifest, 'newRepository')
+
+  const manifest = prepareManifest(packument, '0.0.1')
   expect(manifest.publishConfig).toBeUndefined
   expect(manifest.repository).toEqual('newRepository')
 })
 
 test('prepareManifest retains non-string values from dist', () => {
-  const manifest = {
-    dist: {
-      fileCount: 123,
-      integrity: 'myIntegrity',
-      unpackedSize: 456
+  const packument = {
+    'dist-tags': {
+      latest: '1.0.0'
+    },
+    versions: {
+      '1.0.0': {
+        dist: {
+          fileCount: 123,
+          integrity: 'myIntegrity',
+          unpackedSize: 456
+        },
+        publishConfig: 'myPublishConfig',
+        repository: 'newRepository'
+      }
     }
   }
-  const expected = {...manifest.dist}
-  prepareManifest(manifest, 'myRepository')
+  const expected = {...packument.versions['1.0.0'].dist}
+  const manifest = prepareManifest(packument, '1.0.0')
   expect(manifest.dist).toEqual(expected)
+})
+
+test('prepareManifest includes readme/readmeFilename on latest version', () => {
+  const packument = {
+    'dist-tags': {
+      latest: '1.0.0'
+    },
+    versions: {
+      '1.0.0': {
+        dist: {},
+        publishConfig: 'myPublishConfig'
+      }
+    },
+    readme: '# readme',
+    readmeFilename: 'README.md'
+  }
+  const manifest = prepareManifest(packument, '1.0.0')
+  expect(manifest.readme).toEqual('# readme')
+  expect(manifest.readmeFilename).toEqual('README.md')
+})
+
+test('prepareManifest ignores readme/readmeFilename if not the latest version', () => {
+  const packument = {
+    'dist-tags': {
+      latest: '1.0.0'
+    },
+    versions: {
+      '0.0.1': {
+        dist: {},
+        publishConfig: 'myPublishConfig'
+      },
+      '1.0.0': {
+        dist: {},
+        publishConfig: 'myPublishConfig'
+      }
+    },
+    readme: '# readme',
+    readmeFilename: 'README.md'
+  }
+  const manifest = prepareManifest(packument, '0.0.1')
+  expect(manifest.readme).toBeUndefined
+  expect(manifest.readmeFilename).toBeUndefined
 })
