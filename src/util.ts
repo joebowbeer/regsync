@@ -1,5 +1,5 @@
 import * as pacote from 'pacote'
-import {publish as _publish} from 'libnpmpublish'
+import { publish as _publish } from 'libnpmpublish'
 import got from 'got'
 import ssri from 'ssri'
 
@@ -21,7 +21,7 @@ export function scopedOptions(scope: string | undefined, registry: string, token
 export async function getPackument(name: string, options: Record<string, string>): Promise<Record<string, any>> {
   try {
     return await pacote.packument(name, options)
-  } catch(error) {
+  } catch (error) {
     // TODO: special handling only for 404
     return null
   }
@@ -49,7 +49,7 @@ function getIntegrity(dist: ManifestDist) {
 
 export async function fetchTarball(dist: ManifestDist, token?: string) {
   const res = got(dist.tarball, {
-    headers: token ? {authorization: `Bearer ${token}`} : {},
+    headers: token ? { authorization: `Bearer ${token}` } : {},
     hooks: {
       // workaround for https://github.com/sindresorhus/got/issues/1090
       beforeRedirect: [
@@ -88,10 +88,10 @@ export function prepareManifest(packument: Record<string, any>, version: string)
 }
 
 export async function publish(
-    manifest: Record<string, any>,
-    tarball: Buffer,
-    options: Record<string, string>,
-    dryRun = false): Promise<boolean> {
+  manifest: Record<string, any>,
+  tarball: Buffer,
+  options: Record<string, string>,
+  dryRun = false): Promise<boolean> {
   if (dryRun) {
     console.log('Dry Run')
     return true

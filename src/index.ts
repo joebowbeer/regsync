@@ -1,6 +1,7 @@
-import {fetchTarball, getPackument, namedScope, prepareManifest, publish, scopedOptions} from './util'
+import { fetchTarball, getPackument, namedScope, prepareManifest, publish, scopedOptions } from './util'
+import semver from 'semver';
 
-export async function sync(name: string, from: Record<string, string>, to: Record<string, string>, dryRun = false) {
+export async function sync(name: string, from: Record<string, string>, to: Record<string, string>, dryRun = false, latestOnly = false, latestMajors = false) {
   // TODO: handle version spec
   const scope = namedScope(name)
   console.debug('scope', scope)
@@ -10,7 +11,25 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
   // fullMetadata may needed to obtain the repository property in manifest
   srcOptions.fullMetadata = true
   const srcPackument = await getPackument(name, srcOptions)
-  const srcVersions = srcPackument ? Object.keys(srcPackument.versions) : []
+  const srcVersionsRaw = srcPackument ? Object.keys(srcPackument.versions) : []
+
+  console.debug('Source versions raw', srcVersionsRaw)
+
+  let srcVersions = srcVersionsRaw;
+
+  if (latestOnly) {
+    srcVersions = [srcPackument['dist-tags'].latest]
+  } else if (latestMajors) {
+    srcVersions = Array.from(semver.rsort(srcVersionsRaw).reduce((acc, version) => {
+      const major = semver.major(version)
+      if (!acc.has(major)) {
+        acc.set(major, version)
+      }
+
+      return acc;
+    }, new Map).values())
+  }
+
   console.debug('Source versions', srcVersions)
 
   // get available target versions
