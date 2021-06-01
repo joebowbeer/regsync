@@ -17,9 +17,9 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
 
   let srcVersions = srcVersionsRaw;
 
-  if (latestOnly) {
+  if (srcPackument && latestOnly) {
     srcVersions = [srcPackument['dist-tags'].latest]
-  } else if (latestMajors) {
+  } else if (srcVersionsRaw.length && latestMajors) {
     srcVersions = Array.from(semver.rsort(srcVersionsRaw).reduce((acc, version) => {
       const major = semver.major(version)
       if (!acc.has(major)) {
@@ -49,11 +49,11 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
     console.log('Reading %s from %s', spec, from.registry)
 
     const manifest = prepareManifest(srcPackument, version)
-    console.debug('Dist', manifest.dist)
+    // console.debug('Dist', manifest.dist)
 
     //const tarball = await getTarball(spec, srcOptions)
     const tarball = await fetchTarball(manifest.dist, from.token)
-    console.debug('Tarball length', tarball.length)
+    // console.debug('Tarball length', tarball.length)
 
     console.log('Publishing %s to %s', spec, to.registry)
     await publish(manifest, tarball, dstOptions, dryRun)
