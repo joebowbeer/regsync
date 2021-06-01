@@ -23,11 +23,11 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
     srcVersions = Array.from(semver.rsort(srcVersionsRaw).reduce((acc, version) => {
       const major = semver.major(version)
       if (!acc.has(major)) {
-        acc.set(major, version)
+        acc.set(major, version.toString())
       }
 
       return acc;
-    }, new Map).values())
+    }, new Map).values()).reverse() as string[]
   }
 
   console.debug('Source versions', srcVersions)
