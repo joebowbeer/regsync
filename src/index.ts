@@ -20,7 +20,12 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
   if (srcPackument && latestOnly) {
     srcVersions = [srcPackument['dist-tags'].latest]
   } else if (srcVersionsRaw.length && latestMajors) {
-    srcVersions = Array.from(semver.rsort(srcVersionsRaw).reduce((acc, version) => {
+    const removePrereleases = srcVersionsRaw.filter(version => {
+      const semverInstance = new semver.SemVer(version)
+      return semverInstance.prerelease.length === 0;
+    });
+
+    srcVersions = Array.from(semver.rsort(removePrereleases).reduce((acc, version) => {
       const major = semver.major(version)
       if (!acc.has(major)) {
         acc.set(major, version.toString())
@@ -38,10 +43,21 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
   const dstVersions = dstPackument ? Object.keys(dstPackument.versions) : []
   console.debug('Target versions', dstVersions)
 
-  const missing = srcVersions.filter(x => !dstVersions.includes(x))
+  let missing = srcVersions.filter(x => !dstVersions.includes(x))
   console.log('Missing versions', missing)
   if (!missing.length) {
     return 0
+  }
+
+  const lastVersionInArray = missing[missing.length - 1]
+  const latestDistTag = srcPackument['dist-tags'].latest
+  console.log('last version in array:', lastVersionInArray);
+  console.log('current dist tag:', latestDistTag);
+  if (latestDistTag !== lastVersionInArray) {
+    console.log('dist tag mismatch!')
+    missing = missing.filter(x => x !== latestDistTag)
+    missing.push(latestDistTag)
+    console.log('new missing arrary:', missing);
   }
 
   for (const version of missing) {
