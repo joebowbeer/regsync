@@ -1,7 +1,15 @@
 import { fetchTarball, getPackument, namedScope, prepareManifest, publish, scopedOptions } from './util'
 import semver from 'semver';
 
-export async function sync(name: string, from: Record<string, string>, to: Record<string, string>, dryRun = false, latestOnly = false, latestMajors = false) {
+export async function sync(
+  name: string,
+  from: Record<string, string>,
+  to: Record<string, string>,
+  dryRun = false,
+  latestOnly = false,
+  latestMajors = false,
+  repository?: string
+) {
   // TODO: handle version spec
   const scope = namedScope(name)
   console.debug('scope', scope)
@@ -26,9 +34,16 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
     });
 
     srcVersions = Array.from(semver.rsort(removePrereleases).reduce((acc, version) => {
-      const major = semver.major(version)
-      if (!acc.has(major)) {
-        acc.set(major, version.toString())
+      const semverInstance = new semver.SemVer(version)
+
+      if (semverInstance.major === 0 && semverInstance.minor === 0) {
+        // every one
+        acc.set(version, version)
+      } else if (semverInstance.major === 0) {
+        const key = `${semverInstance.major}.${semverInstance.minor}`
+        if (!acc.has(key)) acc.set(key, version.toString())
+      } else if (!acc.has(semverInstance.major)) {
+        acc.set(semverInstance.major, version.toString())
       }
 
       return acc;
@@ -64,7 +79,7 @@ export async function sync(name: string, from: Record<string, string>, to: Recor
     const spec = name + '@' + version
     console.log('Reading %s from %s', spec, from.registry)
 
-    const manifest = prepareManifest(srcPackument, version)
+    const manifest = prepareManifest(srcPackument, version, repository)
     // console.debug('Dist', manifest.dist)
 
     //const tarball = await getTarball(spec, srcOptions)
