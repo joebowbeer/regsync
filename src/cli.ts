@@ -2,7 +2,7 @@
 
 // Parse command line
 // @ts-ignore(TS1208): all files must be modules when the '--isolatedModules' flag is provided
-const { name, from, to, dryRun, latestOnly, latestMajors } = require('yargs')
+const { name, from, to, dryRun, latestOnly, latestMajors, repository } = require('yargs')
   .usage(`Usage: $0 --name <name> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] [--dry-run] [--latest-only] [--latest-majors]\n
 Publish package versions from one registry to another.`)
   .example('$0 --name @scope/name --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN ' +
@@ -40,6 +40,12 @@ Publish package versions from one registry to another.`)
     boolean: true,
     default: false
   })
+  .option('repository', {
+    demand: false,
+    describe: 'Override the repository field in the package.json',
+    type: 'string',
+    default: undefined
+  })
   .check(function (argv) {
     if (argv.from.registry === undefined) {
       throw (new Error('from.registry must be specified'))
@@ -52,5 +58,5 @@ Publish package versions from one registry to another.`)
   .argv
 
 // Publish all versions of the specified package
-require('./index').sync(name, from, to, dryRun, latestOnly, latestMajors)
+require('./index').sync(name, from, to, dryRun, latestOnly, latestMajors, repository)
   .then(result => console.log('Published: %i %s', result, dryRun ? '(Dry Run)' : ''))
