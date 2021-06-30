@@ -21,12 +21,13 @@ export async function sync(
   const srcPackument = await getPackument(name, srcOptions)
   const srcVersionsRaw = srcPackument ? Object.keys(srcPackument.versions) : []
 
-  console.debug('Source versions raw', srcVersionsRaw)
+  console.debug('Source versions', srcVersionsRaw)
 
   let srcVersions = srcVersionsRaw;
 
   if (srcPackument && latestOnly) {
     srcVersions = [srcPackument['dist-tags'].latest]
+    console.debug('Latest version', srcVersions)
   } else if (srcVersionsRaw.length && latestMajors) {
     const removePrereleases = srcVersionsRaw.filter(version => {
       const semverInstance = new semver.SemVer(version)
@@ -48,9 +49,9 @@ export async function sync(
 
       return acc;
     }, new Map).values()).reverse() as string[]
-  }
 
-  console.debug('Source versions', srcVersions)
+    console.debug('Latest major versions', srcVersions)
+  }
 
   // get available target versions
   const dstOptions = scopedOptions(scope, to.registry, to.token)
@@ -64,15 +65,22 @@ export async function sync(
     return 0
   }
 
-  const lastVersionInArray = missing[missing.length - 1]
+  /*
+    Covers the rare case that the highest version
+    is not the version the `latest` dist tag points to.
+    This code makes sure the last version in the array
+    is the latest, so it's published last and GitHub will
+    then make it's latest dist tag point to it.
+
+    e.g [1.5.6, 2.0.0] but latest is 1.5.6, will change to [2.0.0, 1.5.6]
+  */
+  const lastVersionInMissing = missing[missing.length - 1]
   const latestDistTag = srcPackument['dist-tags'].latest
-  console.log('last version in array:', lastVersionInArray);
-  console.log('current dist tag:', latestDistTag);
-  if (latestDistTag !== lastVersionInArray) {
-    console.log('dist tag mismatch!')
+  if (latestDistTag !== lastVersionInMissing) {
+    console.log('Highest version is not same as latest dist tag!')
     missing = missing.filter(x => x !== latestDistTag)
     missing.push(latestDistTag)
-    console.log('new missing arrary:', missing);
+    console.log('Updated publish order of missing versions:', missing);
   }
 
   for (const version of missing) {
@@ -80,11 +88,11 @@ export async function sync(
     console.log('Reading %s from %s', spec, from.registry)
 
     const manifest = prepareManifest(srcPackument, version, repository)
-    // console.debug('Dist', manifest.dist)
+    console.debug('Dist', manifest.dist)
 
     //const tarball = await getTarball(spec, srcOptions)
     const tarball = await fetchTarball(manifest.dist, from.token)
-    // console.debug('Tarball length', tarball.length)
+    console.debug('Tarball length', tarball.length)
 
     console.log('Publishing %s to %s', spec, to.registry)
     await publish(manifest, tarball, dstOptions, dryRun)
