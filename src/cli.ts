@@ -3,7 +3,7 @@
 // Parse command line
 // @ts-ignore(TS1208): all files must be modules when the '--isolatedModules' flag is provided
 const { name, from, to, dryRun, latestOnly, latestMajors, repository } = require('yargs')
-  .usage(`Usage: $0 --name <name> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] [--dry-run] [--latest-only] [--latest-majors]\n
+  .usage(`Usage: $0 --name <name> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] [--dry-run] [--latest-only] [--latest-majors] [--repository https://github.com/joebowbeer/regsync]\n
 Publish package versions from one registry to another.`)
   .example('$0 --name @scope/name --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN ' +
     '--to.registry https://npm.pkg.github.com --to.token $GITHUB_TOKEN')
