@@ -144,7 +144,6 @@ async function processPackageVersion(packageName: string,
   const manifest = prepareManifest(srcPackument, packageVersion, repositoryFieldNewValue)
   console.debug('Dist', manifest.dist)
 
-  //const tarball = await getTarball(spec, srcOptions)
   const tarball = await fetchTarball(manifest.dist, source.token)
   console.debug('Tarball length', tarball.length)
 
