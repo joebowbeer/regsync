@@ -6,7 +6,7 @@ const { names, from, to, dryRun, latestOnly, latestMajors, repository } = requir
   .usage("Usage: $0 --name <name> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] " +
     "[--dry-run] [--latest-only] [--latest-majors] [--repository https://github.com/joebowbeer/regsync]\n" +
     "Publish package versions from one registry to another.")
-  .example('$0 --name @scope/name --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN ' +
+  .example('$0 --names @scope/packageName1 @scope/packageName2 --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN ' +
     '--to.registry https://npm.pkg.github.com --to.token $GITHUB_TOKEN',
     'Migrate all npm packages from source registry to specified one')
   .strict()
