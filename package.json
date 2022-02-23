@@ -28,6 +28,8 @@
   },
   "homepage": "https://github.com/joebowbeer/regsync#readme",
   "dependencies": {
+    "@types/semver": "^7.3.9",
+    "@types/yargs": "^17.0.8",
     "got": "^10.7.0",
     "libnpmpublish": "^2.0.0",
     "pacote": "^11.2.3",
@@ -62,8 +64,5 @@
       ],
       "@babel/typescript"
     ]
-  },
-  "jest": {
-    "collectCoverage": true
   }
 }

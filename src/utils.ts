@@ -1,14 +1,19 @@
-import * as pacote from 'pacote'
 import { publish as _publish } from 'libnpmpublish'
 import got from 'got'
 import ssri from 'ssri'
 
-export function namedScope(name: string) {
+export function getScopedOptions(packageName: string, source: Record<string, string>) {
+  const scope = getNamedScope(packageName)
+  return scopedOptions(scope, source.registry, source.token)
+}
+
+// exposed for testing
+export function getNamedScope(name: string) {
   const scope = name.match(/^(@[\w-]+)\/[\w-]+$/)
   return scope ? scope[1] : undefined
 }
 
-export function scopedOptions(scope: string | undefined, registry: string, token: string | undefined) {
+function scopedOptions(scope: string | undefined, registry: string, token: string | undefined) {
   const scopedRegistry = scope ? scope + ':registry' : 'registry'
   const opts: Record<string, any> = {}
   opts[scopedRegistry] = registry
@@ -17,25 +22,6 @@ export function scopedOptions(scope: string | undefined, registry: string, token
   }
   return opts
 }
-
-export async function getPackument(name: string, options: Record<string, string>): Promise<Record<string, any>> {
-  try {
-    return await pacote.packument(name, options)
-  } catch (error) {
-    // TODO: special handling only for 404
-    return null
-  }
-}
-
-// export async function getTarball(spec: string, options: Record<string, string>) {
-//   try {
-//     return await pacote.tarball(spec, options)
-//   } catch(error) {
-//     console.error(error.code)
-//     // TODO: special handling only for EINTEGRITY
-//     return null
-//   }
-// }
 
 export interface ManifestDist {
   integrity: string

@@ -1,39 +1,47 @@
-import {namedScope, prepareManifest, scopedOptions} from './util'
+import {getNamedScope, prepareManifest, getScopedOptions} from './utils'
 
 test('namedScope without scope', () => {
-  expect(namedScope('pkgname')).toBeUndefined
+  expect(getNamedScope('pkgname')).toBeUndefined
 })
 
 test('namedScope without slash', () => {
-  expect(namedScope('@pkgscope')).toBeUndefined
+  expect(getNamedScope('@pkgscope')).toBeUndefined
 })
 
 test('namedScope with @scope/', () => {
-  expect(namedScope('@pkgscope/pkgname')).toBe('@pkgscope')
+  expect(getNamedScope('@pkgscope/pkgname')).toBe('@pkgscope')
 })
 
 test('namedScope with hyphenated names', () => {
-  expect(namedScope('@pkg-scope/pkg-name')).toBe('@pkg-scope')
+  expect(getNamedScope('@pkg-scope/pkg-name')).toBe('@pkg-scope')
 })
 
-test('scopedOptions with scope and token', () => {
-  expect(scopedOptions('@pkgscope', 'myregistry', 'mytoken')).toEqual({
-    '@pkgscope:registry': 'myregistry',
-    token: 'mytoken'
-  })
+test('getScopedOptions with scope and token', () => {
+  expect(getScopedOptions('@pkgscope/test', {registry: 'myregistry', token: 'mytoken'}))
+    .toEqual({
+               '@pkgscope:registry': 'myregistry',
+               token: 'mytoken'
+             })
 })
 
-test('scopedOptions without scope', () => {
-  expect(scopedOptions(undefined, 'myregistry', 'mytoken')).toEqual({
-    registry: 'myregistry',
-    token: 'mytoken'
-  })
+test('getScopedOptions without scope', () => {
+  expect(getScopedOptions("test", {registry: 'myregistry', token: 'mytoken'}))
+    .toEqual({
+               registry: 'myregistry',
+               token: 'mytoken'
+             })
 })
 
-test('scopedOptions without scope or token', () => {
-  expect(scopedOptions(undefined, 'myregistry', undefined)).toEqual({
-    registry: 'myregistry'
-  })
+test('getScopedOptions without scope and token', () => {
+  expect(getScopedOptions("test", {registry: 'myregistry', token: undefined}))
+    .toEqual({registry: 'myregistry'})
+})
+
+test('scopedOptions without token', () => {
+  expect(getScopedOptions("test", {registry: 'myregistry', token: undefined}))
+    .toEqual({
+               registry: 'myregistry'
+             })
 })
 
 test('prepareManifest removes publishConfig and updates repository', () => {

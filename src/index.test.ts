@@ -1,5 +1,5 @@
-import {sync} from './index'
+import {syncPackages} from './Index'
 
 test('regsync', () => {
-  expect(sync).toBeInstanceOf(Function) // TODO
+  expect(syncPackages).toBeInstanceOf(Function)
 })

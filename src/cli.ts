@@ -1,16 +1,7 @@
 #!/usr/bin/env node
-import yargs from 'yargs/yargs';
-import {sync} from "./index";
+import {syncPackages} from "./Index";
 
-const {
-  name,
-  to,
-  from,
-  dryRun,
-  latestOnly,
-  latestMajors,
-  repository
-} = yargs()
+const { names, from, to, dryRun, latestOnly, latestMajors, repository } = require('yargs')
   .usage("Usage: $0 --name <name> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] " +
     "[--dry-run] [--latest-only] [--latest-majors] [--repository https://github.com/joebowbeer/regsync]\n" +
     "Publish package versions from one registry to another.")
@@ -18,11 +9,9 @@ const {
     '--to.registry https://npm.pkg.github.com --to.token $GITHUB_TOKEN',
     'Migrate all npm packages from source registry to specified one')
   .strict()
-  .option('name', {
+  .array('names', {
     demand: true,
-    describe: 'Full package name including scope',
-    nargs: 1,
-    type: 'string'
+    describe: 'Full package names including scope'
   })
   .option('from', {
     demand: true,
@@ -65,11 +54,10 @@ const {
     }
     return true
   })
-  .argv
+  .parse()
 
-// Publish all versions of the specified package
-sync(
-  name,
+syncPackages(
+  names,
   from as Record<string, string>,
   to as Record<string, string>,
   dryRun as boolean,
