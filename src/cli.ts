@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {syncPackages} from "./Index";
+import {syncPackages} from "./index";
 
 const { names, from, to, dryRun, latestOnly, latestMajors, repository } = require('yargs')
   .usage("Usage: $0 --name <name> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] " +
