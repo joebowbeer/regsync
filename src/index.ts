@@ -37,7 +37,7 @@ async function syncPackage(
   console.debug('Pre-selected source version', srcVersions)
 
   if (srcVersions.length === 0) {
-    console.info("Nothing to sync")
+    console.info(`Nothing to sync in ${packageName}`)
     return 0
   }
 
@@ -49,13 +49,13 @@ async function syncPackage(
   let packageVersionsToPublish = calculateMissing(srcVersions, dstVersions, srcLatestDistTag)
 
   for (const packageVersion of packageVersionsToPublish) {
-    await publishPackage(packageName,
-                         packageVersion,
-                         target,
-                         source,
-                         srcPackument,
-                         repositoryFieldNewValue,
-                         dryRun)
+    await processPackageVersionHandleErrors(packageName,
+                                            packageVersion,
+                                            target,
+                                            source,
+                                            srcPackument,
+                                            repositoryFieldNewValue,
+                                            dryRun)
   }
 
   return packageVersionsToPublish.length
@@ -110,15 +110,35 @@ function placePackageWithLatestDistDagInTheEnd(missing: string[], srcLatestDistT
   }
 }
 
-async function publishPackage(packageName: string,
-                              packageVersion: string,
-                              target: Record<string, string>,
-                              source: Record<string, string>,
-                              srcPackument: Record<string, any>,
-                              repositoryFieldNewValue: string,
-                              dryRun: boolean) {
+async function processPackageVersionHandleErrors(packageName: string,
+                                                 packageVersion: string,
+                                                 target: Record<string, string>,
+                                                 source: Record<string, string>,
+                                                 srcPackument: Record<string, any>,
+                                                 repositoryFieldNewValue: string,
+                                                 dryRun: boolean) {
+  try {
+    await processPackageVersion(packageName,
+                                packageVersion,
+                                target,
+                                source,
+                                srcPackument,
+                                repositoryFieldNewValue,
+                                dryRun)
+  } catch (error) {
+    console.debug(error)
+  }
+}
+
+async function processPackageVersion(packageName: string,
+                                     packageVersion: string,
+                                     target: Record<string, string>,
+                                     source: Record<string, string>,
+                                     srcPackument: Record<string, any>,
+                                     repositoryFieldNewValue: string,
+                                     dryRun: boolean) {
   const spec = packageName + '@' + packageVersion
-  console.log('Publishing %s to %s', spec, target.registry)
+  console.log('Processing %s to %s', spec, target.registry)
 
   console.debug('Reading %s from %s', spec, source.registry)
   const manifest = prepareManifest(srcPackument, packageVersion, repositoryFieldNewValue)
@@ -128,8 +148,7 @@ async function publishPackage(packageName: string,
   const tarball = await fetchTarball(manifest.dist, source.token)
   console.debug('Tarball length', tarball.length)
 
-  console.debug('Do publish %s to %s', spec, source.registry)
-
+  console.debug('Do publish %s to %s', spec, target.registry)
   const dstOptions = getScopedOptions(packageName, target)
   await publish(manifest, tarball, dstOptions, dryRun)
 }
