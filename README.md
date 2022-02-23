@@ -3,8 +3,10 @@
 **Migrate npm packages from one npm registry into another**
 
 ### Usage
-```shell script
-regsync --packages @scope/pkgname1 @scope/pkgname2 @scope/pkgname3 \
+```bash
+npm install -g @rugpanov/regsync
+
+regsync --packages "pacote" "@babel/core" \
  --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN \
  --to.registry http://localhost:8390/npm/p/mp/npm/ --to.token $GITHUB_TOKEN
 ```
@@ -17,6 +19,6 @@ regsync --packages @scope/pkgname1 @scope/pkgname2 @scope/pkgname3 \
 
 
 ### Tool development
-```
-./dist/cli.js --names packageName --from.registry https://registry.npmjs.org/ --to.registry http://localhost:8390/npm/p/mp/npm/
+```bash
+./dist/cli.js --packages "pacote" "@babel/core" --from.registry https://registry.npmjs.org/ --to.registry http://localhost:8390/npm/p/mp/npm/
 ```
