@@ -79,7 +79,6 @@ export async function publish(
   options: Record<string, string>,
   dryRun = false): Promise<boolean> {
   if (dryRun) {
-    console.log('Dry Run')
     return true
   }
   return _publish(manifest, tarball, options)

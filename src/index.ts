@@ -1,6 +1,7 @@
 import {fetchTarball, getScopedOptions, prepareManifest, publish} from './utils'
 import * as pacote from "pacote";
 import {filterSourceVersions} from "./filters";
+const logger = require('pino')();
 
 export async function syncPackages(
   names: string[],
@@ -14,9 +15,12 @@ export async function syncPackages(
   let result = 0
   for (let i = 0; i < names.length; i++) {
     const name = names[i]
-    console.debug(`Synchronizing ${name}`)
+    logger.info(`[${name}] synchronisation started`)
+    let versionsImported = await syncPackage(name, from, to, dryRun, latestOnly, latestMajors, repositoryFieldNewValue)
+    logger.info(`[${name}] imported ${versionsImported} versions`)
+    logger.info(`--------------------------`)
 
-    result += await syncPackage(name, from, to, dryRun, latestOnly, latestMajors, repositoryFieldNewValue)
+    result += versionsImported
   }
   return result
 }
@@ -30,23 +34,28 @@ async function syncPackage(
   latestMajors = false,
   repositoryFieldNewValue?: string
 ) {
-
   // fullMetadata may be needed to obtain the repository property in manifest
   const srcPackument = await getPackageMetadata(source, packageName, true)
-  const srcVersions = filterSourceVersions(srcPackument, latestOnly, latestMajors);
-  console.debug('Pre-selected source version', srcVersions)
+  const srcVersions = filterSourceVersions(packageName, srcPackument, latestOnly, latestMajors);
+  logger.debug(`[${packageName}] pre-selected source version: ${srcVersions}`)
 
   if (srcVersions.length === 0) {
-    console.info(`Nothing to sync in ${packageName}`)
+    logger.info(`[${packageName}] nothing to sync`)
     return 0
   }
 
   const dstPackument = await getPackageMetadata(target, packageName, false)
   const dstVersions = dstPackument ? Object.keys(dstPackument.versions) : []
-  console.debug('Target versions', dstVersions)
+  logger.debug(`[${packageName}] found target versions: ${dstVersions}`)
 
   const srcLatestDistTag = (srcPackument != null) ? srcPackument['dist-tags'].latest : null
-  let packageVersionsToPublish = calculateMissing(srcVersions, dstVersions, srcLatestDistTag)
+  let packageVersionsToPublish = calculateMissing(packageName, srcVersions, dstVersions, srcLatestDistTag)
+
+  if (packageVersionsToPublish.length === 0) {
+    logger.info(`[${packageName}] nothing to import`)
+  } else {
+    logger.info(`[${packageName}] versions to import: ${packageVersionsToPublish}`)
+  }
 
   for (const packageVersion of packageVersionsToPublish) {
     await processPackageVersionHandleErrors(packageName,
@@ -63,35 +72,38 @@ async function syncPackage(
 
 async function getPackageMetadata(source: Record<string, string>,
                                   packageName: string,
-                                  shouldRequestFullMetadata: boolean) {
+                                  fromSource: boolean) {
   const srcOptions = getScopedOptions(packageName, source)
-  srcOptions.fullMetadata = shouldRequestFullMetadata
-  return await getPackument(packageName, srcOptions)
+  srcOptions.fullMetadata = fromSource
+  return await getPackument(packageName, srcOptions, !fromSource)
 }
 
-export async function getPackument(name: string, options: Record<string, string>): Promise<Record<string, any>> {
+export async function getPackument(name: string,
+                                   options: Record<string, string>,
+                                   ignoreNotFound: boolean): Promise<Record<string, any>> {
   try {
     return await pacote.packument(name, options)
   } catch (error) {
     if (error.message) {
-      console.log(error.message)
+      if (!ignoreNotFound || !error.message.startsWith("404 Not Found")) {
+        logger.error(error.message)
+      }
     } else {
-      console.log(error)
+      logger.error(error)
     }
     return null
   }
 }
 
-function calculateMissing(srcVersions: string[], dstVersions: string[], srcLatestDistTag?: string) {
+function calculateMissing(packageName: string, srcVersions: string[], dstVersions: string[], srcLatestDistTag?: string) {
   let missing = srcVersions.filter(x => !dstVersions.includes(x))
   if (missing.length != 0 && srcLatestDistTag != null) {
-    placePackageWithLatestDistDagInTheEnd(missing, srcLatestDistTag)
+    placePackageWithLatestDistDagInTheEnd(packageName, missing, srcLatestDistTag)
   }
-  console.log('Missing versions', missing)
   return missing
 }
 
-function placePackageWithLatestDistDagInTheEnd(missing: string[], srcLatestDistTag: string) {
+function placePackageWithLatestDistDagInTheEnd(packageName: string, missing: string[], srcLatestDistTag: string) {
   /*
     Covers the rare case that the highest version
     is not the version the `latest` dist tag points to.
@@ -103,10 +115,10 @@ function placePackageWithLatestDistDagInTheEnd(missing: string[], srcLatestDistT
   */
   const lastVersionInMissing = missing[missing.length - 1]
   if (srcLatestDistTag !== lastVersionInMissing) {
-    console.log('Highest version is not same as latest dist tag!')
+    logger.debug(`[${packageName}] highest version is not same as latest dist tag!`)
     missing = missing.filter(x => x !== srcLatestDistTag)
     missing.push(srcLatestDistTag)
-    console.log('Updated publish order of missing versions:', missing);
+    logger.debug(`[${packageName}] updated publish order of missing versions: ${missing}`);
   }
 }
 
@@ -126,7 +138,7 @@ async function processPackageVersionHandleErrors(packageName: string,
                                 repositoryFieldNewValue,
                                 dryRun)
   } catch (error) {
-    console.debug(error)
+    logger.debug(error)
   }
 }
 
@@ -138,16 +150,17 @@ async function processPackageVersion(packageName: string,
                                      repositoryFieldNewValue: string,
                                      dryRun: boolean) {
   const spec = packageName + '@' + packageVersion
-  console.log('Processing %s to %s', spec, target.registry)
+  logger.info(`[${spec}] start importing`)
 
-  console.debug('Reading %s from %s', spec, source.registry)
+  logger.debug(`[${packageName}] reading ${spec} from ${source.registry}`)
   const manifest = prepareManifest(srcPackument, packageVersion, repositoryFieldNewValue)
-  console.debug('Dist', manifest.dist)
+  logger.debug(`[${packageName}] dist ${manifest.dist}`)
 
   const tarball = await fetchTarball(manifest.dist, source.token)
-  console.debug('Tarball length', tarball.length)
+  logger.debug(`[${packageName}] tarball length: ${tarball.length}`)
 
-  console.debug('Do publish %s to %s', spec, target.registry)
+  logger.debug(`[${packageName}] do publish ${spec} to ${target.registry}`)
   const dstOptions = getScopedOptions(packageName, target)
   await publish(manifest, tarball, dstOptions, dryRun)
+  logger.info(`[${spec}] finish importing`)
 }

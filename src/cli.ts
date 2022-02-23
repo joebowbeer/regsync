@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {syncPackages} from "./index";
+const logger = require('pino')();
 
 const { names, from, to, dryRun, latestOnly, latestMajors, repository } = require('yargs')
   .usage("Usage: $0 --name <name> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] " +
@@ -64,4 +65,4 @@ syncPackages(
   latestOnly as boolean,
   latestMajors as boolean,
   repository as string
-).then(result => console.log('Published: %i %s', result, dryRun ? '(Dry Run)' : ''))
+).then(result => logger.debug('Published: %i %s', result, dryRun ? '(Dry Run)' : ''))

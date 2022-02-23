@@ -1,8 +1,12 @@
 import * as semver from "semver";
+const logger = require('pino')();
 
-export function filterSourceVersions(sourcePackument: Record<string, any>, latestOnly: boolean, latestMajors: boolean) {
+export function filterSourceVersions(packageName: string,
+                                     sourcePackument: Record<string, any>,
+                                     latestOnly: boolean,
+                                     latestMajors: boolean) {
   const allSourceVersions = sourcePackument ? (sourcePackument.versions ? Object.keys(sourcePackument.versions) : []) : []
-  console.debug('Source versions', allSourceVersions)
+  logger.debug(`[${packageName}] source versions: ${allSourceVersions}`)
 
   let filteredSourceVersions = []
   if (latestOnly === false && latestMajors === false) {
