@@ -9,9 +9,10 @@ const { names, from, to, dryRun, latestOnly, latestMajors, repository } = requir
     '--to.registry https://npm.pkg.github.com --to.token $GITHUB_TOKEN',
     'Migrate all npm packages from source registry to specified one')
   .strict()
-  .array('names', {
+  .option('names', {
     demand: true,
-    describe: 'Full package names including scope'
+    describe: 'Full package names including scope',
+    type: "array"
   })
   .option('from', {
     demand: true,
@@ -24,25 +25,24 @@ const { names, from, to, dryRun, latestOnly, latestMajors, repository } = requir
   .option('dry-run', {
     demand: false,
     describe: 'Does everything except publish',
-    boolean: true,
-    default: false
+    default: false,
+    boolean: true
   })
   .option('latest-only', {
     demand: false,
     describe: 'Only syncs the latest dist-tag version',
-    boolean: true,
-    default: false
+    default: false,
+    boolean: true
   })
   .option('latest-majors', {
     demand: false,
     describe: 'Only syncs the latest majors',
-    boolean: true,
-    default: false
+    default: false,
+    boolean: true
   })
   .option('repository', {
     demand: false,
     describe: 'Override the repository field in the package.json',
-    type: 'string',
     default: undefined
   })
   .check(function (argv: any) {

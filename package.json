@@ -13,7 +13,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "npm run compile -- --delete-dir-on-start",
+    "build": "npm run compile -- --delete-dir-on-start && chmod +x dist/cli.js",
     "compile": "babel src -d dist --extensions .ts --ignore '**/*.d.ts,**/*.test.ts'",
     "check-types": "tsc",
     "watch": "npm run compile -- --watch",

@@ -11,12 +11,14 @@ export async function syncPackages(
   latestMajors = false,
   repositoryFieldNewValue?: string
 ) {
+  let result = 0
   for (let i = 0; i < names.length; i++) {
     const name = names[i]
     console.debug(`Synchronizing ${name}`)
 
-    await syncPackage(name, from, to, dryRun, latestOnly, latestMajors, repositoryFieldNewValue)
+    result += await syncPackage(name, from, to, dryRun, latestOnly, latestMajors, repositoryFieldNewValue)
   }
+  return result
 }
 
 async function syncPackage(
@@ -33,6 +35,11 @@ async function syncPackage(
   const srcPackument = await getPackageMetadata(source, packageName, true)
   const srcVersions = filterSourceVersions(srcPackument, latestOnly, latestMajors);
   console.debug('Pre-selected source version', srcVersions)
+
+  if (srcVersions.length === 0) {
+    console.info("Nothing to sync")
+    return 0
+  }
 
   const dstPackument = await getPackageMetadata(target, packageName, false)
   const dstVersions = dstPackument ? Object.keys(dstPackument.versions) : []
@@ -66,7 +73,11 @@ export async function getPackument(name: string, options: Record<string, string>
   try {
     return await pacote.packument(name, options)
   } catch (error) {
-    console.log(error)
+    if (error.message) {
+      console.log(error.message)
+    } else {
+      console.log(error)
+    }
     return null
   }
 }

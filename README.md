@@ -12,5 +12,11 @@ regsync --name @scope/pkgname1 @scope/pkgname2 @scope/pkgname3 \
 ### Additional arguments
 * `dry-run` - does everything except publish
 * `latest-only` - syncs only the latest dist-tag version
-* `latest-only` - syncs only the latest majors
+* `latest-majors` - syncs only the latest majors
 * `repository` - overrides the repository field in the package.json with provided value
+
+
+### Tool development
+```
+./dist/cli.js --names packageName --from.registry https://registry.npmjs.org/ --to.registry http://localhost:8390/npm/p/mp/npm/
+```

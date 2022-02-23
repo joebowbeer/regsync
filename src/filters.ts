@@ -1,7 +1,7 @@
 import * as semver from "semver";
 
 export function filterSourceVersions(sourcePackument: Record<string, any>, latestOnly: boolean, latestMajors: boolean) {
-  const allSourceVersions = sourcePackument ? Object.keys(sourcePackument.versions) : []
+  const allSourceVersions = sourcePackument ? (sourcePackument.versions ? Object.keys(sourcePackument.versions) : []) : []
   console.debug('Source versions', allSourceVersions)
 
   let filteredSourceVersions = []
