@@ -4,7 +4,7 @@
 
 ### Usage
 ```shell script
-regsync --name @scope/pkgname1 @scope/pkgname2 @scope/pkgname3 \
+regsync --packages @scope/pkgname1 @scope/pkgname2 @scope/pkgname3 \
  --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN \
  --to.registry http://localhost:8390/npm/p/mp/npm/ --to.token $GITHUB_TOKEN
 ```

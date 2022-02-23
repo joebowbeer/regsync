@@ -2,15 +2,15 @@
 import {syncPackages} from "./index";
 const logger = require('pino')();
 
-const { names, from, to, dryRun, latestOnly, latestMajors, repository } = require('yargs')
+const { packages, from, to, dryRun, latestOnly, latestMajors, repository } = require('yargs')
   .usage("Usage: $0 --name <name> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] " +
     "[--dry-run] [--latest-only] [--latest-majors] [--repository https://github.com/joebowbeer/regsync]\n" +
     "Publish package versions from one registry to another.")
-  .example('$0 --names @scope/packageName1 @scope/packageName2 --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN ' +
+  .example('$0 --packages @scope/packageName1 @scope/packageName2 --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN ' +
     '--to.registry https://npm.pkg.github.com --to.token $GITHUB_TOKEN',
     'Migrate all npm packages from source registry to specified one')
   .strict()
-  .option('names', {
+  .option('packages', {
     demand: true,
     describe: 'Full package names including scope',
     type: "array"
@@ -58,7 +58,7 @@ const { names, from, to, dryRun, latestOnly, latestMajors, repository } = requir
   .parse()
 
 syncPackages(
-  names,
+  packages,
   from as Record<string, string>,
   to as Record<string, string>,
   dryRun as boolean,
