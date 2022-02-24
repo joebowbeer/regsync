@@ -2,24 +2,14 @@
 
 **Migrate npm packages from one npm registry into another**
 
-### Usage
+### Usage with npm
 
-#### Install package
+#### 1. Install
 ```shell
 npm install -g @rugpanov/regsync
 ```
-or
-```shell
-docker pull rugpanov/regsync
 
-docker run --name regsync --rm -ti rugpanov/regsync /bin/bash \
--c 'regsync --packages "pacote" "@babel/core" \
---from.registry https://registry.npmjs.org \
---to.registry https://npm.pkg.github.com \
---to.token MY_TOKEN \
---latest-only'
-```
-#### Execute synchronization
+#### 2. Execute 
 **Interactive mode**
 ```shell
 regsync
@@ -33,6 +23,17 @@ regsync --packages "pacote" "@babel/core" \
  --to.token $GITHUB_TOKEN
 ```
 
+### Usage with docker
+```shell
+docker pull rugpanov/regsync
+
+docker run --name regsync --rm -ti rugpanov/regsync /bin/bash \
+-c 'regsync --packages "pacote" "@babel/core" \
+--from.registry https://registry.npmjs.org \
+--to.registry https://npm.pkg.github.com \
+--to.token MY_TOKEN \
+--latest-only'
+```
 
 ### Additional arguments
 * `dry-run` - does everything except publish
