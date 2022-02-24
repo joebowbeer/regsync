@@ -1,23 +1,17 @@
 import {fetchTarball, getScopedOptions, prepareManifest, publish} from './utils'
-import * as pacote from "pacote";
-import {filterSourceVersions} from "./filters";
-const logger = require('pino')();
+import * as pacote from "pacote"
+import {filterSourceVersions} from "./filters"
+import {MigrationSettings} from "./settings"
 
-export async function syncPackages(
-  names: string[],
-  from: Record<string, string>,
-  to: Record<string, string>,
-  dryRun = false,
-  latestOnly = false,
-  latestMajors = false,
-  repositoryFieldNewValue?: string
-) {
+const logger = require('pino')()
+
+export async function syncPackages(settings: MigrationSettings) {
   let result = 0
-  for (let i = 0; i < names.length; i++) {
-    const name = names[i]
-    logger.info(`[${name}] synchronisation started`)
-    let versionsImported = await syncPackage(name, from, to, dryRun, latestOnly, latestMajors, repositoryFieldNewValue)
-    logger.info(`[${name}] imported ${versionsImported} versions`)
+  for (let i = 0; i < settings.packages.length; i++) {
+    const npmPackage = settings.packages[i]
+    logger.info(`[${npmPackage}] synchronisation started`)
+    let versionsImported = await syncPackage(settings, npmPackage)
+    logger.info(`[${npmPackage}] imported ${versionsImported} versions`)
     logger.info(`--------------------------`)
 
     result += versionsImported
@@ -26,17 +20,12 @@ export async function syncPackages(
 }
 
 async function syncPackage(
-  packageName: string,
-  source: Record<string, string>,
-  target: Record<string, string>,
-  dryRun = false,
-  latestOnly = false,
-  latestMajors = false,
-  repositoryFieldNewValue?: string
+  settings: MigrationSettings,
+  packageName: string
 ) {
   // fullMetadata may be needed to obtain the repository property in manifest
-  const srcPackument = await getPackageMetadata(source, packageName, true)
-  const srcVersions = filterSourceVersions(packageName, srcPackument, latestOnly, latestMajors);
+  const srcPackument = await getPackageMetadata(settings.source, packageName, true)
+  const srcVersions = filterSourceVersions(packageName, srcPackument, settings.migrationMode);
   logger.debug(`[${packageName}] pre-selected source version: ${srcVersions}`)
 
   if (srcVersions.length === 0) {
@@ -44,7 +33,7 @@ async function syncPackage(
     return 0
   }
 
-  const dstPackument = await getPackageMetadata(target, packageName, false)
+  const dstPackument = await getPackageMetadata(settings.target, packageName, false)
   const dstVersions = dstPackument ? Object.keys(dstPackument.versions) : []
   logger.debug(`[${packageName}] found target versions: ${dstVersions}`)
 
@@ -58,13 +47,9 @@ async function syncPackage(
   }
 
   for (const packageVersion of packageVersionsToPublish) {
-    await processPackageVersionHandleErrors(packageName,
-                                            packageVersion,
-                                            target,
-                                            source,
-                                            srcPackument,
-                                            repositoryFieldNewValue,
-                                            dryRun)
+    await processPackageVersionHandleErrors(settings,
+                                            packageName,
+                                            packageVersion)
   }
 
   return packageVersionsToPublish.length
@@ -122,45 +107,34 @@ function placePackageWithLatestDistDagInTheEnd(packageName: string, missing: str
   }
 }
 
-async function processPackageVersionHandleErrors(packageName: string,
-                                                 packageVersion: string,
-                                                 target: Record<string, string>,
-                                                 source: Record<string, string>,
-                                                 srcPackument: Record<string, any>,
-                                                 repositoryFieldNewValue: string,
-                                                 dryRun: boolean) {
+async function processPackageVersionHandleErrors(settings: MigrationSettings,
+                                                 packageName: string,
+                                                 packageVersion: string) {
   try {
-    await processPackageVersion(packageName,
-                                packageVersion,
-                                target,
-                                source,
-                                srcPackument,
-                                repositoryFieldNewValue,
-                                dryRun)
+    await processPackageVersion(settings,
+                                packageName,
+                                packageVersion)
   } catch (error) {
-    logger.debug(error)
+    logger.error(error)
   }
 }
 
-async function processPackageVersion(packageName: string,
-                                     packageVersion: string,
-                                     target: Record<string, string>,
-                                     source: Record<string, string>,
-                                     srcPackument: Record<string, any>,
-                                     repositoryFieldNewValue: string,
-                                     dryRun: boolean) {
+async function processPackageVersion(settings: MigrationSettings,
+                                     packageName: string,
+                                     packageVersion: string) {
   const spec = packageName + '@' + packageVersion
   logger.info(`[${spec}] start importing`)
 
-  logger.debug(`[${packageName}] reading ${spec} from ${source.registry}`)
-  const manifest = prepareManifest(srcPackument, packageVersion, repositoryFieldNewValue)
+  logger.debug(`[${packageName}] reading ${spec} from ${settings.source.registry}`)
+  const srcPackument = await getPackageMetadata(settings.source, packageName, true)
+  const manifest = prepareManifest(srcPackument, packageVersion, settings.repositoryFieldNewValue)
   logger.debug(`[${packageName}] dist ${manifest.dist}`)
 
-  const tarball = await fetchTarball(manifest.dist, source.token)
+  const tarball = await fetchTarball(manifest.dist, settings.source.token)
   logger.debug(`[${packageName}] tarball length: ${tarball.length}`)
 
-  logger.debug(`[${packageName}] do publish ${spec} to ${target.registry}`)
-  const dstOptions = getScopedOptions(packageName, target)
-  await publish(manifest, tarball, dstOptions, dryRun)
+  logger.debug(`[${packageName}] do publish ${spec} to ${settings.target.registry}`)
+  const dstOptions = getScopedOptions(packageName, settings.target)
+  await publish(manifest, tarball, dstOptions, settings.dryRun)
   logger.info(`[${spec}] finish importing`)
 }

@@ -1,22 +1,23 @@
-import * as semver from "semver";
-const logger = require('pino')();
+import * as semver from "semver"
+import {MigrationMode} from "./settings"
+
+const logger = require('pino')()
 
 export function filterSourceVersions(packageName: string,
                                      sourcePackument: Record<string, any>,
-                                     latestOnly: boolean,
-                                     latestMajors: boolean) {
+                                     migrationMode: MigrationMode) {
   const allSourceVersions = sourcePackument ? (sourcePackument.versions ? Object.keys(sourcePackument.versions) : []) : []
   logger.debug(`[${packageName}] source versions: ${allSourceVersions}`)
 
   let filteredSourceVersions = []
-  if (latestOnly === false && latestMajors === false) {
+  if (migrationMode === MigrationMode.ALL) {
     filteredSourceVersions = allSourceVersions
-  } else if (latestOnly === true && sourcePackument != null) {
+  } else if (migrationMode === MigrationMode.ONLY_LATEST && sourcePackument != null) {
     filteredSourceVersions = [sourcePackument['dist-tags'].latest]
-  } else if (latestMajors == true && allSourceVersions.length != 0) {
+  } else if (migrationMode === MigrationMode.LATEST_MAJORS && allSourceVersions.length != 0) {
     filteredSourceVersions = getLatestMajorVersions(allSourceVersions);
   }
-  return filteredSourceVersions;
+  return filteredSourceVersions
 }
 
 function getLatestMajorVersions(srcVersionsRaw: string[]) {

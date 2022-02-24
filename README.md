@@ -14,11 +14,17 @@ docker pull rugpanov/regsync
 docker run --rm -it --name npm-regsync --entrypoint bash rugpanov/regsync
 ```
 #### Execute synchronization
+**Interactive mode**
+```shell
+regsync
+```
+**Provide parameters as cli arguments**
 ```shell
 regsync --packages "pacote" "@babel/core" \
  --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN \
  --to.registry http://localhost:8390/npm/p/mp/npm/ --to.token $GITHUB_TOKEN
 ```
+
 
 ### Additional arguments
 * `dry-run` - does everything except publish

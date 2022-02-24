@@ -1,6 +1,7 @@
 import { publish as _publish } from 'libnpmpublish'
 import got from 'got'
 import ssri from 'ssri'
+import URL from "url"
 
 export function getScopedOptions(packageName: string, source: Record<string, string>) {
   const scope = getNamedScope(packageName)
@@ -82,4 +83,16 @@ export async function publish(
     return true
   }
   return _publish(manifest, tarball, options)
+}
+
+export function isValidUrl(str: string): boolean {
+  let url
+
+  try {
+    url = new URL.URL(str)
+  } catch (_) {
+    return false
+  }
+
+  return url.protocol === "http:" || url.protocol === "https:"
 }
