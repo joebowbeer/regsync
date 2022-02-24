@@ -11,13 +11,13 @@ npm install -g @rugpanov/regsync
 or
 ```shell
 docker pull rugpanov/regsync
+
 docker run --name regsync --rm -ti rugpanov/regsync /bin/bash \
 -c 'regsync --packages "pacote" "@babel/core" \
 --from.registry https://registry.npmjs.org \
 --to.registry https://npm.pkg.github.com \
 --to.token MY_TOKEN \
 --latest-only'
-docker stop regsync
 ```
 #### Execute synchronization
 **Interactive mode**
@@ -27,8 +27,10 @@ regsync
 **Provide parameters as cli arguments**
 ```shell
 regsync --packages "pacote" "@babel/core" \
- --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN \
- --to.registry http://localhost:8390/npm/p/mp/npm/ --to.token $GITHUB_TOKEN
+ --from.registry https://registry.npmjs.org/ \
+ --from.token $NPM_TOKEN \
+ --to.registry http://localhost:8390/npm/p/mp/npm/ \
+ --to.token $GITHUB_TOKEN
 ```
 
 
@@ -41,16 +43,18 @@ regsync --packages "pacote" "@babel/core" \
 
 ### Development
 ```shell
-./dist/cli.js --packages "pacote" "@babel/core" --from.registry https://registry.npmjs.org/ --to.registry http://localhost:8390/npm/p/mp/npm/ 
+./dist/cli.js --packages "pacote" "@babel/core" \
+--from.registry https://registry.npmjs.org/ \
+--to.registry http://localhost:8390/npm/p/mp/npm/ 
 ```
 or
 ```shell
 docker build -t rugpanov/regsync .
+
 docker run --name regsync --rm -ti rugpanov/regsync /bin/bash \
 -c 'regsync --packages "pacote" "@babel/core" \
 --from.registry https://registry.npmjs.org \
 --to.registry https://npm.pkg.github.com \
 --to.token MY_TOKEN \
 --latest-only'
-docker stop regsync
 ```
