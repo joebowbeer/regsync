@@ -2,6 +2,9 @@ import { publish as _publish } from 'libnpmpublish'
 import got from 'got'
 import ssri from 'ssri'
 import URL from "url"
+import {MigrationSettings} from "./settings";
+
+const logger = require('pino')()
 
 export function getScopedOptions(packageName: string, source: Record<string, string>) {
   const scope = getNamedScope(packageName)
@@ -95,4 +98,28 @@ export function isValidUrl(str: string): boolean {
   }
 
   return url.protocol === "http:" || url.protocol === "https:"
+}
+
+export async function ensureRepositoryAccess(settings: MigrationSettings) {
+  try {
+    const sourceResponse = await got(`${settings.source.registry}/-/ping`, {
+      headers: settings.source.token ? {authorization: `Bearer ${settings.source.token}`} : {}
+    })
+    logger.debug(`Source repository status (read access): ${sourceResponse.statusCode}`)
+  } catch (e) {
+    logger.error(`No read access for source repository`, e)
+    return false
+  }
+
+  try {
+    const targetResponse = await got(`${settings.target.registry}/-/ping?write=true`, {
+      headers: settings.target.token ? { authorization: `Bearer ${settings.target.token}` } : {}
+    })
+    logger.debug(`Target repository status (write access): ${targetResponse.statusCode}`)
+  } catch (e) {
+    logger.error(`No write access for target repository`, e)
+    return false
+  }
+
+  return true
 }

@@ -1,12 +1,17 @@
-import {fetchTarball, getScopedOptions, prepareManifest, publish} from './utils'
+import {ensureRepositoryAccess, fetchTarball, getScopedOptions, prepareManifest, publish} from './utils'
 import * as pacote from "pacote"
 import {filterSourceVersions} from "./filters"
 import {MigrationSettings} from "./settings"
 
 const logger = require('pino')()
 
-export async function syncPackages(settings: MigrationSettings) {
+export async function syncPackages(settings: MigrationSettings): Promise<number> {
   let result = 0
+
+  if (!await ensureRepositoryAccess(settings)) {
+    return 0
+  }
+
   for (let i = 0; i < settings.packages.length; i++) {
     const npmPackage = settings.packages[i]
     logger.info(`[${npmPackage}] synchronisation started`)
