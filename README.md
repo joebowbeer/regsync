@@ -29,7 +29,7 @@ regsync --packages "pacote" "@babel/core" \
 
 ### Development
 ```shell
-npm start --packages "pacote" "@babel/core" --from.registry https://registry.npmjs.org/ --to.registry http://localhost:8390/npm/p/mp/npm/
+./dist/cli.js --packages "pacote" "@babel/core" --from.registry https://registry.npmjs.org/ --to.registry http://localhost:8390/npm/p/mp/npm/
 ```
 or
 ```shell

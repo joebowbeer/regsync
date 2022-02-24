@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 import {syncPackages} from "./index";
+import * as inquirer from "inquirer"
+import * as URL from "url";
+
 const logger = require('pino')();
 
 const { packages, from, to, dryRun, latestOnly, latestMajors, repository } = require('yargs')
-  .usage("Usage: $0 --name <name> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] " +
-    "[--dry-run] [--latest-only] [--latest-majors] [--repository https://github.com/joebowbeer/regsync]\n" +
-    "Publish package versions from one registry to another.")
+  // .usage("Usage: $0 --packages <packages> --from.registry <url> [--from.token <x>] --to.registry <url> [--to.token <y>] " +
+  //   "[--dry-run] [--latest-only] [--latest-majors] [--repository https://github.com/joebowbeer/regsync]\n" +
+  //   "Publish package versions from one registry to another.")
   .example('$0 --packages @scope/packageName1 @scope/packageName2 --from.registry https://registry.npmjs.org/ --from.token $NPM_TOKEN ' +
     '--to.registry https://npm.pkg.github.com --to.token $GITHUB_TOKEN',
     'Migrate all npm packages from source registry to specified one')
@@ -16,11 +19,9 @@ const { packages, from, to, dryRun, latestOnly, latestMajors, repository } = req
     type: "array"
   })
   .option('from', {
-    demand: true,
     describe: 'Source registry and token'
   })
   .option('to', {
-    demand: true,
     describe: 'Target registry and token'
   })
   .option('dry-run', {
@@ -47,22 +48,86 @@ const { packages, from, to, dryRun, latestOnly, latestMajors, repository } = req
     default: undefined
   })
   .check(function (argv: any) {
-    if (argv.from.registry === undefined) {
-      throw new Error('from.registry must be specified')
-    }
-    if (argv.to.registry === undefined) {
-      throw new Error('to.registry must be specified')
-    }
+    // if (argv.from.registry === undefined) {
+    //   throw new Error('from.registry must be specified')
+    // }
+    // if (argv.to.registry === undefined) {
+    //   throw new Error('to.registry must be specified')
+    // }
     return true
   })
   .parse()
 
-syncPackages(
-  packages,
-  from as Record<string, string>,
-  to as Record<string, string>,
-  dryRun as boolean,
-  latestOnly as boolean,
-  latestMajors as boolean,
-  repository as string
-).then(result => logger.debug('Published: %i %s', result, dryRun ? '(Dry Run)' : ''))
+
+
+inquirer
+    .prompt([
+      {
+        name: 'fromUrl',
+        type: 'input',
+        message: 'Please provide source npm registry url',
+        when: (_) => !from,
+        validate: async (input) => {
+          if (isValidHttpUrl(input)) {
+            return 'Incorrect url';
+          }
+          return true;
+        }
+      },
+      {
+        name: 'fromToken',
+        type: 'password',
+        message: 'Please provide source npm registry token',
+        when: (_) => !from
+      },
+      {
+        name: 'toUrl',
+        type: 'input',
+        message: 'Please provide target npm registry url',
+        when: (_) => !to,
+        validate: async (input) => {
+          if (isValidHttpUrl(input)) {
+            return 'Incorrect url';
+          }
+          return true;
+        }
+      },
+      {
+        name: 'toToken',
+        type: 'password',
+        message: 'Please provide target npm registry token',
+        when: (_) => !to
+      },
+      {
+        name: 'migrationMode',
+        type: 'checkbox',
+        message: 'Please provide target npm registry token',
+        choices: ["all", "only-latest", "latest-majors"],
+        when: (_) => !to && !from
+      },
+    ])
+    .then(answers => {
+      console.info('Answer:', answers.fromUrl);
+    });
+
+// syncPackages(
+//   packages,
+//   from as Record<string, string>,
+//   to as Record<string, string>,
+//   dryRun as boolean,
+//   latestOnly as boolean,
+//   latestMajors as boolean,
+//   repository as string
+// ).then(result => logger.debug('Published: %i %s', result, dryRun ? '(Dry Run)' : ''))
+
+function isValidHttpUrl(srt: string) {
+  let url;
+
+  try {
+    url = new URL.URL(srt);
+  } catch (_) {
+    return false;
+  }
+
+  return url.protocol === "http:" || url.protocol === "https:";
+}
