@@ -1,5 +1,5 @@
 {
-  "name": "@rugpanov/regsync",
+  "name": "@joebowbeer/regsync",
   "version": "1.3.10",
   "description": "Publish package versions from one registry into another",
   "main": "dist/index.js",
@@ -13,7 +13,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "npm run compile -- --delete-dir-on-start && chmod +x dist/cli.js && npm install -g .",
+    "build": "npm run compile -- --delete-dir-on-start && chmod +x dist/cli.js",
+    "local-install": "npm install -g .",
     "compile": "babel src -d dist --extensions .ts --ignore '**/*.d.ts,**/*.test.ts'",
     "check-types": "tsc",
     "watch": "npm run compile -- --watch",
