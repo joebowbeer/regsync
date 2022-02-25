@@ -6,7 +6,7 @@
 
 #### 1. Install
 ```shell
-npm install -g @rugpanov/regsync
+npm install -g @joebowbeer/regsync
 ```
 
 #### 2. Execute 
@@ -23,7 +23,7 @@ regsync --packages "pacote" "@babel/core" \
  --to.token $GITHUB_TOKEN
 ```
 
-### Usage with docker
+### Usage with docker (under development)
 ```shell
 docker pull rugpanov/regsync
 
