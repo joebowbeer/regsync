@@ -25,7 +25,7 @@ regsync --packages "pacote" "@babel/core" \
 
 ### Usage with docker (under development)
 ```shell
-docker pull rugpanov/regsync
+docker pull registry.jetbrains.team/p/crl/docker-public/rugpanov/regsync
 
 docker run --name regsync --rm -ti rugpanov/regsync /bin/bash \
 -c 'regsync --packages "pacote" "@babel/core" \
