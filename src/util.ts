@@ -44,7 +44,7 @@ export interface ManifestDist {
 }
 
 function getIntegrity(dist: ManifestDist) {
-  return dist.integrity ? dist.integrity : ssri.fromHex(dist.shasum, 'sha1').toString()
+//   return dist.integrity ? dist.integrity : ssri.fromHex(dist.shasum, 'sha1').toString()
 }
 
 export async function fetchTarball(dist: ManifestDist, token?: string) {
@@ -92,9 +92,9 @@ export async function publish(
     tarball: Buffer,
     options: Record<string, string>,
     dryRun = false): Promise<boolean> {
-  if (dryRun) {
-    console.log('Dry Run')
-    return true
-  }
+//   if (dryRun) {
+//     console.log('Dry Run')
+//     return true
+//   }
   return _publish(manifest, tarball, options)
 }
