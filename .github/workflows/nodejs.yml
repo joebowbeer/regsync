@@ -26,6 +26,16 @@ jobs:
       - run: npm t
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@de2e56b42aa84d0b1c5b622644ac17e505c9a049
+        with:
+          args: >
+            -Dsonar.organization=joebowbeer
+            -Dsonar.projectKey=joebowbeer_regsync
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.sources=src
+            -Dsonar.exclusions=src/**/*.test.*
+            -Dsonar.tests=src
+            -Dsonar.test.inclusions=src/**/*.test.*
+            -Dsonar.verbose=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
