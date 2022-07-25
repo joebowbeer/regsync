@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/joebowbeer/regsync#readme",
   "dependencies": {
-    "got": "^10.7.0",
+    "got": "^12.2.0",
     "libnpmpublish": "^2.0.0",
     "pacote": "^11.2.3",
     "ssri": "^8.0.1",
